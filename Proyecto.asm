@@ -51,30 +51,115 @@ obtenerUbicacion macro c,u,t,p,l
     inc si
     loop l1+l
             
-endm           
+endm  
+
+obtenerCoordenadaDisparo macro c,u,t,p
     
+    mov si, offset u 
+    mov dl,c  
+    mov [si],dl 
+            
+endm 
+
+
+convertirNumero macro   
+ 
+    conversion:   
+    mov ah,00h 
+    mov bl, 10   
+    div bl       
+    mov dh, ah     
+    mov dl, al   
+    mov ah, 00h  
+    mov al, dh   
+    push ax      
+    mov ax, 0000h  
+    mov al, dl   
+    add cl, 1
+    cmp dl, 0    
+    jnz conversion
+  
+                               
+endm
+
+mostrarNumero macro 
+    
+    mostrar: 
+    sub cl, 1    
+    pop ax       
+    mov ah, 02h  
+    mov dl, al       
+    add dl, 30h  
+    int 21h      
+    cmp cl, 0    
+    jz mostrar 
+    
+endm
     
 
 .model small
 .data
          
-msgBienv db '-------------------------------------------------',10,13 
-         db '------------------Batalla naval------------------',10,13 
+msgBien1 db '-------------------------------------------------',10,13 
+         db '-------------------Battleship--------------------',10,13 
          db '-------------------------------------------------',10,13 
          db '                  Instrucciones:                 ',10,13  
          db '                                                 ',10,13
-         db '1.-                                              ',10,13 
-         db 'Presiona cualquier tecla para empezar a jugar    ',10,13,'$'
+         db '  Tu mision es derribar todas las embarcaciones  ',10,13
+         db '                   del enemigo!                  ',10,13
+         db '                                                 ',10,13
+         db '    1. Se presentara un tablero de 7x7 celdas    ',10,13
+         db '                     enemiga.                    ',10,13
+         db '                                                 ',10,13 
+         db ' 2. Debes ingresar las coordenadas donde quieres ',10,13
+         db '     disparar un misil. Ejemplo: Coordenada D5   ',10,13
+         db '                                                 ',10,13
+         db '                   A B C D E F G                 ',10,13   
+         db '                 1 - - - - - - -                 ',10,13
+         db '                 2 - - - - - - -                 ',10,13
+         db '                 3 - - - - - - -                 ',10,13
+         db '                 4 - - - - - - -                 ',10,13
+         db '                 5 - - - X - - -                 ',10,13
+         db '                 6 - - - - - - -                 ',10,13
+         db '                 7 - - - - - - -                 ',10,13,
+         db '                                                 ',10,13
+         db '    Presiona cualquier tecla para continuar ->   ',10,13,'$' 
+         
+
+msgBien2 db '                                                 ',10,13
+         db '3. Si tu misil le da a una embarcacion enemiga la',10,13
+         db '  coordenada cambiara a un 1, caso contrario se  ',10,13
+         db '                  marcara con un 0.              ',10,13
+         db '                                                 ',10,13
+         db '  4. Tendras 21 misiles para acabar con la flota ',10,13
+         db '                      enemiga.                   ',10,13
+         db '                                                 ',10,13
+         db '                  Buena suerte!!!                ',10,13
+         db '                                                 ',10,13 
+         db '  Presiona cualquier tecla para empezar a jugar  ',10,13,'$'
          
 msgCarga db '-------------------------------------------------',10,13 
          db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13
          db '-------------------------------------------------',10,13 
-         db '---------------Cargando tablero...---------------',10,13   
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13 
+         db '--------------- Generando tablero ---------------',10,13
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13   
          db '-------------------------------------------------',10,13
          db '-------------------------------------------------',10,13 
          db '-------------------------------------------------',10,13,'$'
-           
-  
+
+
+cabezera db '-----------------------------------------------',10,13 
+         db '----------------- Battleship ------------------',10,13 
+         db '-----------------------------------------------',10,13 
+         db '               Acabalos a todos!               ',10,13 
+         db '                                               ',10,13
+         db '                                               ',10,13,'$'           
+                                                      
 tablero db 09,09,'  A B C D E F G',10,13   
         db 09,09,'1 - - - - - - -',10,13
         db 09,09,'2 - - - - - - -',10,13
@@ -82,8 +167,8 @@ tablero db 09,09,'  A B C D E F G',10,13
         db 09,09,'4 - - - - - - -',10,13
         db 09,09,'5 - - - - - - -',10,13
         db 09,09,'6 - - - - - - -',10,13
-        db 09,09,'7 - - - - - - -',10,13,'$'
-          
+        db 09,09,'7 - - - - - - -',10,13,'$' 
+        
 ;la tabla tiene indices del 0 al 6 en filas y columnas, donde la coordenada A1 
 ;dentro de la cadena de caracteres 'tablero' es igual a 23. Por lo que para acceder a una
 ;coordenada de la tabla se debe seguir el calculo tablero[23+2(x)+19(y)] donde 'x' es el 
@@ -92,6 +177,25 @@ tablero db 09,09,'  A B C D E F G',10,13
 ;ejemplo: para acceder a la coordenada C4, se necesita el indice 2,3 de la tabla, y se debe 
 ;acceder al indice de la cadena 'tablero' con la operacion 23+2(2)+19(3)=84. En resumen el 
 ;indice de 2,3 de la tabla es igual a tablero[84].
+        
+        
+tableroCopia db 09,09,'  A B C D E F G',10,13   
+             db 09,09,'1 - - - - - - -',10,13
+             db 09,09,'2 - - - - - - -',10,13
+             db 09,09,'3 - - - - - - -',10,13
+             db 09,09,'4 - - - - - - -',10,13
+             db 09,09,'5 - - - - - - -',10,13
+             db 09,09,'6 - - - - - - -',10,13
+             db 09,09,'7 - - - - - - -',10,13,'$' 
+             
+             
+ingresoCoordUser1 db 'Misil ','$'
+ingresoCoordUser2 db ', ingresar celda a atacar: ',10,13,'$'
+                 
+          
+cxMisiles db 1 
+contador db 0 
+turnosJuego db 21
 
 ;variables del portaviones        
 tamanioPort dw 5 
@@ -111,14 +215,23 @@ var3o db 0   ;para guardar si un navio estara horizontal o vertical
 var4s db 0   ;para guardar salto en la tabla (dependiendo si es horizontal o vertical)  
 
 coordxy db 23d ;indice inicial (coordenada 0,0) 
+
+coordenadaUser db 0,0
         
 .code   
 
 .startup 
 
-imprimir msgBienv
+imprimir msgBien1 
 
-;ingreso de enter para empezar juego
+;ingreso de tecla para segunda pantalla de bienvenida
+mov ah,01h   
+int 21h 
+
+borrarPantalla
+imprimir msgBien2
+
+;ingreso de tecla para empezar juego
 mov ah,01h   
 int 21h
             
@@ -173,15 +286,15 @@ mov bx,tamanioPort
 obtenerUbicacion coordxy,ubicacionPort,bx,var4s,p
 
 mov bl,ubicacionPort[0]
-mov tablero[bx],'P' 
+mov tableroCopia[bx],'P' 
 mov bl,ubicacionPort[1]
-mov tablero[bx],'P'
+mov tableroCopia[bx],'P'
 mov bl,ubicacionPort[2]
-mov tablero[bx],'P'
+mov tableroCopia[bx],'P'
 mov bl,ubicacionPort[3]
-mov tablero[bx],'P'
+mov tableroCopia[bx],'P'
 mov bl,ubicacionPort[4]
-mov tablero[bx],'P'   
+mov tableroCopia[bx],'P'   
 
 
 
@@ -231,19 +344,19 @@ mov si, offset ubicacionCruc
 mov cx,4  
 loopCruc: 
 mov bl,[si] 
-cmp tablero[bx],'-' 
+cmp tableroCopia[bx],'-' 
 jnz  ubicarCrucero:
 inc si
 loop loopCruc:  
                                                              
 mov bl,ubicacionCruc[0]
-mov tablero[bx],'C' 
+mov tableroCopia[bx],'C' 
 mov bl,ubicacionCruc[1]
-mov tablero[bx],'C'
+mov tableroCopia[bx],'C'
 mov bl,ubicacionCruc[2] 
-mov tablero[bx],'C'  
+mov tableroCopia[bx],'C'  
 mov bl,ubicacionCruc[3] 
-mov tablero[bx],'C'
+mov tableroCopia[bx],'C'
 
  
 ;se ubica el submarino de forma aleatoria
@@ -291,19 +404,77 @@ mov si, offset ubicacionSub
 mov cx,3  
 loopSub: 
 mov bl,[si] 
-cmp tablero[bx],'-' 
+cmp tableroCopia[bx],'-' 
 jnz  ubicarSubmarino:
 inc si
 loop loopSub:  
 
 mov bl,ubicacionSub[0]
-mov tablero[bx],'S' 
+mov tableroCopia[bx],'S' 
 mov bl,ubicacionSub[1]
-mov tablero[bx],'S'
+mov tableroCopia[bx],'S'
 mov bl,ubicacionSub[2] 
-mov tablero[bx],'S'
+mov tableroCopia[bx],'S'
+
+mov ax,0
+mov bx,0 
+mov cx,0 
+mov dx,0
+
+mov var1x,0
+mov var2y,0 
   
+loopJuego: 
 
 borrarPantalla
+
+imprimir cabezera
 imprimir tablero
+imprimir ingresoCoordUser1 
+
+mov al,cxMisiles
+
+convertirNumero
+mostrarNumero
+
+imprimir ingresoCoordUser2 
+
+add cxMisiles,1 
+sub turnosJuego,1
+
+
+
+
+mov si, offset coordenadaUser
+mov cx,2
+loopCoord:
+mov ah,01h   
+int 21h 
+mov [si], ax 
+inc si
+loop loopCoord
+
+;Obtencion de indice del tablero  
+
+mov dl,coordenadaUser[0]
+sub dl,41h
+mov var1x,dl
+
+mov dl,coordenadaUser[1]
+sub dl,31h
+mov var2y,dl 
+
+mov coordxy,23d 
+
+obtenerIndice var1x,var2y
+
+mov bl,coordxy
+mov tablero[bx],'X'
+
+ 
+
+cmp turnosJuego,0
+jnz loopJuego
+
+
 
