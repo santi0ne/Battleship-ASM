@@ -101,10 +101,12 @@ endm
 verificarEstadoFlota macro u,d,t,n
     
     cmp d,0 
-    jz embarcacionCaida+n
+    jz embarcacionCaida+n 
+    imprimir estado1
     jnz salir+n
     
-    embarcacionCaida+n:
+    embarcacionCaida+n: 
+    imprimir estado3
     add embarcacionesHundidas,1  
     
     mov si, offset u
@@ -115,9 +117,7 @@ verificarEstadoFlota macro u,d,t,n
     inc si
     loop flota+n
      
-    salir+n:
-    
-    
+    salir+n:    
     
 endm
     
@@ -185,7 +185,41 @@ cabecera db '-----------------------------------------------',10,13
          db '-----------------------------------------------',10,13 
          db '               Acabalos a todos!               ',10,13 
          db '                                               ',10,13
-         db '                                               ',10,13,'$'           
+         db '                                               ',10,13,'$'
+         
+
+estado1  db '-----------------------------------------------',10,13
+         db '           Estado: Impacto confirmado          ',10,13
+         db '-----------------------------------------------',10,13,'$'
+
+estado2  db '-----------------------------------------------',10,13
+         db '            Estado: Impacto fallido            ',10,13
+         db '-----------------------------------------------',10,13,'$'
+
+estado3  db '-----------------------------------------------',10,13
+         db '           Estado:Embarcacion hundida          ',10,13 
+         db '-----------------------------------------------',10,13,'$'
+         
+msgGanador  db '-----------------------------------------------',10,13 
+            db '      Derribaste toda la flota enemiga!!!      ',10,13  
+            db '                                               ',10,13
+            db '                  Ganaste!!!                   ',10,13
+            db '-----------------------------------------------',10,13
+            db '                                               ',10,13
+            db '                                               ',10,13
+            db '    Pulsa cualquier tecla para jugar de nuevo  ','$'
+             
+
+msgPerdedor db '-----------------------------------------------',10,13 
+            db '            Te quedaste sin misiles            ',10,13  
+            db '                                               ',10,13
+            db '                  Perdiste :(                  ',10,13
+            db '-----------------------------------------------',10,13
+            db '                                               ',10,13
+            db '                                               ',10,13
+            db '    Pulsa cualquier tecla para jugar de nuevo  ','$'
+         
+espacio db 10,13,'$'         
                                                       
 tablero db 09,09,'  A B C D E F G',10,13   
         db 09,09,'1 - - - - - - -',10,13
@@ -215,15 +249,13 @@ tableroCopia db 09,09,'  A B C D E F G',10,13
              db 09,09,'6 - - - - - - -',10,13
              db 09,09,'7 - - - - - - -',10,13,'$' 
              
-hundimiento db 'Embarcacion hundida','$' 
-
-msgGanador db 'Ganaste','$' 
-
-msgPerdedor db 'Perdiste','$'
-             
 ;variables de coordenadas que ingresa el usuario             
-ingresoCoordUser1 db 'Misil ','$'
-ingresoCoordUser2 db ', ingresar celda a atacar: ','$'          
+ingresoCoordUser1 db 10,13 
+                  db 'Misil ','$'
+
+ingresoCoordUser2 db ', ingresar celda a atacar: ','$'
+                            
+
 cxMisiles db 1    ;se utiliza como contador de misiles y turnos
 coordenadaUser db 0,0,0 
 turnosJuego db 21
@@ -292,6 +324,7 @@ mov ax,0
 mov bx,0
 mov cx,0
 mov dx,0 
+
 ;obtener de forma aleatoria si el portaviones sera horizontal o vertical
 generarNumAleatorio 2 
 mov var3o,dl
@@ -328,13 +361,17 @@ obtenerUbicacion coordxy,ubicacionPort,bx,var4s,p
 
 ;se ubica el portaviones en una copia del tablero
 mov bl,ubicacionPort[0]
-mov tableroCopia[bx],'P' 
+mov tableroCopia[bx],'P'
+ 
 mov bl,ubicacionPort[1]
 mov tableroCopia[bx],'P'
+
 mov bl,ubicacionPort[2]
 mov tableroCopia[bx],'P'
+
 mov bl,ubicacionPort[3]
 mov tableroCopia[bx],'P'
+
 mov bl,ubicacionPort[4]
 mov tableroCopia[bx],'P'   
 
@@ -349,6 +386,7 @@ mov ax,0
 mov bx,0
 mov cx,0
 mov dx,0 
+
 ;obtener de forma aleatoria si el crucero sera horizontal o vertical
 generarNumAleatorio 2 
 mov var3o,dl
@@ -395,11 +433,14 @@ loop loopCruc:
 
 ;se ubica el crucero en una copia del tablero                                                             
 mov bl,ubicacionCruc[0]
-mov tableroCopia[bx],'C' 
+mov tableroCopia[bx],'C'
+ 
 mov bl,ubicacionCruc[1]
 mov tableroCopia[bx],'C'
+
 mov bl,ubicacionCruc[2] 
-mov tableroCopia[bx],'C'  
+mov tableroCopia[bx],'C'
+  
 mov bl,ubicacionCruc[3] 
 mov tableroCopia[bx],'C'
 
@@ -412,7 +453,8 @@ mov coordxy,23d
 mov ax,0
 mov bx,0
 mov cx,0
-mov dx,0 
+mov dx,0  
+
 ;obtener de forma aleatoria si el submarino sera horizontal o vertical
 generarNumAleatorio 2 
 mov var3o,dl
@@ -460,9 +502,11 @@ loop loopSub:
 
 ;se ubica el portaviones en una copia del tablero
 mov bl,ubicacionSub[0]
-mov tableroCopia[bx],'S' 
+mov tableroCopia[bx],'S'
+ 
 mov bl,ubicacionSub[1]
 mov tableroCopia[bx],'S'
+
 mov bl,ubicacionSub[2] 
 mov tableroCopia[bx],'S'
 
@@ -476,13 +520,13 @@ mov dx,0
 
 mov var1x,0
 mov var2y,0 
+
   
 loopJuego: 
 
 borrarPantalla
 imprimir cabecera
 imprimir tablero 
-imprimir tableroCopia
 
 ;impresion de linea con mensaje para pedir una coordenada
 imprimir ingresoCoordUser1 
@@ -503,6 +547,7 @@ int 21h
 mov [si], ax 
 inc si
 loop loopCoord
+imprimir espacio
 
 ;Obtencion de indice del tablero  
 mov dl,coordenadaUser[0]
@@ -519,59 +564,81 @@ obtenerIndice var1x,var2y
 
 mov bl,coordxy
  
-
+;verificar si el disparo acerto o no
 cmp tableroCopia[bx],'-'
 jz disparoNoAcertado 
 jnz disparoAcertado
- 
+
+
+;si acierta: 
 disparoAcertado:
 
+;verificar si el submarino se hundio
 verificarSub:
 cmp tableroCopia[bx],'S'
 jz submarinoAlcanzado 
-jnz verificarCruc 
+jnz verificarCruc
+ 
 submarinoAlcanzado:
 mov tablero[bx],'1'
 sub disparosSub,1 
 verificarEstadoFlota ubicacionSub,disparosSub,3,1
 jmp salirDisparo  
 
+
+;verificar si el crucero se hundio
 verificarCruc:
 cmp tableroCopia[bx],'C'
 jz cruceroAlcanzado
-jnz verificarPort
+jnz verificarPort 
+
 cruceroAlcanzado:
 mov tablero[bx],'1'
 sub disparosCruc,1 
 verificarEstadoFlota ubicacionCruc,disparosCruc,4,2
 jmp salirDisparo  
 
+
+;verificar si el portavion se hundio
 verificarPort:
 cmp tableroCopia[bx],'P'
 jz portavionesAlcanzado
+
 portavionesAlcanzado:
 mov tablero[bx],'1'
 sub disparosPort,1 
 verificarEstadoFlota ubicacionPort,disparosPort,5,3
 jmp salirDisparo
-
+              
+              
+;si el disparo no acierta
 disparoNoAcertado: 
 mov tablero[bx],'0'
+imprimir estado2
 jmp salirDisparo 
 
+
+;verifica si las 3 embarcaciones se hundieron
 salirDisparo:
 cmp embarcacionesHundidas,3
 jz terminarJuego  
 
+;caso contrario el juego sigue
+mov ah,01h   
+int 21h 
+
 cmp turnosJuego,0
 jnz loopJuego 
+jmp juegoPerdido
 
+;si el jugador gana
 terminarJuego:
 borrarPantalla
 imprimir msgGanador 
 jmp salir 
 
 
+;si el jugador pierde
 juegoPerdido:
 borrarPantalla
 imprimir msgPerdedor
