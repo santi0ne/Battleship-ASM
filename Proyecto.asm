@@ -1,4 +1,6 @@
-;macros
+
+
+;-----------------------------------Macros------------------------------------------
 
 ;imprimir cualquier cadena de caracteres terminado en $
 imprimir macro t
@@ -75,7 +77,7 @@ convertirNumero macro
     push ax      
     mov ax, 0000h  
     mov al, dl   
-    add cl, 1
+    add contador, 1
     cmp dl, 0    
     jnz conversion
   
@@ -85,20 +87,45 @@ endm
 mostrarNumero macro 
     
     mostrar: 
-    sub cl, 1    
+    sub contador, 1    
     pop ax       
     mov ah, 02h  
     mov dl, al       
     add dl, 30h  
     int 21h      
-    cmp cl, 0    
+    cmp contador, 0    
     jz mostrar 
+    
+endm
+
+verificarEstadoFlota macro u,d,t,n
+    
+    cmp d,0 
+    jz embarcacionCaida+n
+    jnz salir+n
+    
+    embarcacionCaida+n:
+    add embarcacionesHundidas,1  
+    
+    mov si, offset u
+    mov cx,t  
+    flota+n:
+    mov bl,[si] 
+    mov tablero[bx],'X' 
+    inc si
+    loop flota+n
+     
+    salir+n:
+    
+    
     
 endm
     
 
 .model small
-.data
+.data 
+
+;-----------------------------Datos y variables----------------------------------
          
 msgBien1 db '-------------------------------------------------',10,13 
          db '-------------------Battleship--------------------',10,13 
@@ -153,7 +180,7 @@ msgCarga db '-------------------------------------------------',10,13
          db '-------------------------------------------------',10,13,'$'
 
 
-cabezera db '-----------------------------------------------',10,13 
+cabecera db '-----------------------------------------------',10,13 
          db '----------------- Battleship ------------------',10,13 
          db '-----------------------------------------------',10,13 
          db '               Acabalos a todos!               ',10,13 
@@ -188,39 +215,50 @@ tableroCopia db 09,09,'  A B C D E F G',10,13
              db 09,09,'6 - - - - - - -',10,13
              db 09,09,'7 - - - - - - -',10,13,'$' 
              
+hundimiento db 'Embarcacion hundida','$' 
+
+msgGanador db 'Ganaste','$' 
+
+msgPerdedor db 'Perdiste','$'
              
+;variables de coordenadas que ingresa el usuario             
 ingresoCoordUser1 db 'Misil ','$'
-ingresoCoordUser2 db ', ingresar celda a atacar: ',10,13,'$'
-                 
-          
-cxMisiles db 1 
-contador db 0 
+ingresoCoordUser2 db ', ingresar celda a atacar: ','$'          
+cxMisiles db 1    ;se utiliza como contador de misiles y turnos
+coordenadaUser db 0,0,0 
 turnosJuego db 21
 
 ;variables del portaviones        
 tamanioPort dw 5 
-ubicacionPort db 0,0,0,0,0  
+ubicacionPort db 0,0,0,0,0 
+disparosPort db 5 
 
 ;variables del crucero        
 tamanioCruc dw 4 
-ubicacionCruc db 0,0,0,0  
+ubicacionCruc db 0,0,0,0 
+disparosCruc db 4  
 
 ;variables del submarino        
 tamanioSub dw 3 
-ubicacionSub db 0,0,0  
+ubicacionSub db 0,0,0
+disparosSub db 3  
+
+embarcacionesHundidas db 0 
 
 var1x db 0   ;para guardar coordenada x que se pasara al macro obtenerIndice
 var2y db 0   ;para guardar coordenada y que se pasara al macro obtenerIndice
 var3o db 0   ;para guardar si un navio estara horizontal o vertical
 var4s db 0   ;para guardar salto en la tabla (dependiendo si es horizontal o vertical)  
 
-coordxy db 23d ;indice inicial (coordenada 0,0) 
+coordxy db 23d ;indice inicial (coordenada 0,0)
 
-coordenadaUser db 0,0
+contador db 0 
         
 .code   
 
-.startup 
+.startup  
+
+;-----------------------------Pantalla de bienvenida----------------------------------
 
 imprimir msgBien1 
 
@@ -239,10 +277,13 @@ borrarPantalla
 imprimir msgCarga
 
 
+;------------------------Ubicacion aleatoria de embarcaciones--------------------------
+
 mov ax,0
 mov bx,0
 mov cx,0 
 
+;PORTAVIONES
  
 ;se ubica el portaviones de forma aleatoria
 ubicarPortaviones: 
@@ -285,6 +326,7 @@ obtenerIndice var1x,var2y
 mov bx,tamanioPort 
 obtenerUbicacion coordxy,ubicacionPort,bx,var4s,p
 
+;se ubica el portaviones en una copia del tablero
 mov bl,ubicacionPort[0]
 mov tableroCopia[bx],'P' 
 mov bl,ubicacionPort[1]
@@ -298,6 +340,8 @@ mov tableroCopia[bx],'P'
 
 
 
+;CRUCERO 
+ 
 ;se ubica el crucero de forma aleatoria
 ubicarCrucero: 
 mov coordxy,23d
@@ -339,7 +383,7 @@ obtenerIndice var1x,var2y
 mov bx,tamanioCruc 
 obtenerUbicacion coordxy,ubicacionCruc,bx,var4s,c 
 
-
+;se valida que ninguna ubicacion de crucero choque con ubicaciones ocupadas
 mov si, offset ubicacionCruc 
 mov cx,4  
 loopCruc: 
@@ -348,7 +392,8 @@ cmp tableroCopia[bx],'-'
 jnz  ubicarCrucero:
 inc si
 loop loopCruc:  
-                                                             
+
+;se ubica el crucero en una copia del tablero                                                             
 mov bl,ubicacionCruc[0]
 mov tableroCopia[bx],'C' 
 mov bl,ubicacionCruc[1]
@@ -358,6 +403,8 @@ mov tableroCopia[bx],'C'
 mov bl,ubicacionCruc[3] 
 mov tableroCopia[bx],'C'
 
+
+;SUBMARINO
  
 ;se ubica el submarino de forma aleatoria
 ubicarSubmarino:   
@@ -400,6 +447,7 @@ obtenerIndice var1x,var2y
 mov bx,tamanioSub 
 obtenerUbicacion coordxy,ubicacionSub,bx,var4s,s
 
+;se valida que ninguna ubicacion de crucero choque con ubicaciones ocupadas
 mov si, offset ubicacionSub 
 mov cx,3  
 loopSub: 
@@ -409,12 +457,17 @@ jnz  ubicarSubmarino:
 inc si
 loop loopSub:  
 
+
+;se ubica el portaviones en una copia del tablero
 mov bl,ubicacionSub[0]
 mov tableroCopia[bx],'S' 
 mov bl,ubicacionSub[1]
 mov tableroCopia[bx],'S'
 mov bl,ubicacionSub[2] 
 mov tableroCopia[bx],'S'
+
+
+;-----------------------------Logica del juego----------------------------------
 
 mov ax,0
 mov bx,0 
@@ -427,24 +480,21 @@ mov var2y,0
 loopJuego: 
 
 borrarPantalla
+imprimir cabecera
+imprimir tablero 
+imprimir tableroCopia
 
-imprimir cabezera
-imprimir tablero
+;impresion de linea con mensaje para pedir una coordenada
 imprimir ingresoCoordUser1 
-
 mov al,cxMisiles
-
-convertirNumero
-mostrarNumero
-
+convertirNumero           ;convertir numero del misil por lanzar
+mostrarNumero             ;mostrar numero del misil por lanzar
 imprimir ingresoCoordUser2 
 
 add cxMisiles,1 
 sub turnosJuego,1
 
-
-
-
+;se obtiene indicie de tablero donde caera el misil
 mov si, offset coordenadaUser
 mov cx,2
 loopCoord:
@@ -455,7 +505,6 @@ inc si
 loop loopCoord
 
 ;Obtencion de indice del tablero  
-
 mov dl,coordenadaUser[0]
 sub dl,41h
 mov var1x,dl
@@ -466,15 +515,69 @@ mov var2y,dl
 
 mov coordxy,23d 
 
-obtenerIndice var1x,var2y
+obtenerIndice var1x,var2y 
 
 mov bl,coordxy
-mov tablero[bx],'X'
-
  
 
+cmp tableroCopia[bx],'-'
+jz disparoNoAcertado 
+jnz disparoAcertado
+ 
+disparoAcertado:
+
+verificarSub:
+cmp tableroCopia[bx],'S'
+jz submarinoAlcanzado 
+jnz verificarCruc 
+submarinoAlcanzado:
+mov tablero[bx],'1'
+sub disparosSub,1 
+verificarEstadoFlota ubicacionSub,disparosSub,3,1
+jmp salirDisparo  
+
+verificarCruc:
+cmp tableroCopia[bx],'C'
+jz cruceroAlcanzado
+jnz verificarPort
+cruceroAlcanzado:
+mov tablero[bx],'1'
+sub disparosCruc,1 
+verificarEstadoFlota ubicacionCruc,disparosCruc,4,2
+jmp salirDisparo  
+
+verificarPort:
+cmp tableroCopia[bx],'P'
+jz portavionesAlcanzado
+portavionesAlcanzado:
+mov tablero[bx],'1'
+sub disparosPort,1 
+verificarEstadoFlota ubicacionPort,disparosPort,5,3
+jmp salirDisparo
+
+disparoNoAcertado: 
+mov tablero[bx],'0'
+jmp salirDisparo 
+
+salirDisparo:
+cmp embarcacionesHundidas,3
+jz terminarJuego  
+
 cmp turnosJuego,0
-jnz loopJuego
+jnz loopJuego 
+
+terminarJuego:
+borrarPantalla
+imprimir msgGanador 
+jmp salir 
+
+
+juegoPerdido:
+borrarPantalla
+imprimir msgPerdedor
+jmp salir
+
+salir:
 
 
 
