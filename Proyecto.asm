@@ -119,6 +119,17 @@ verificarEstadoFlota macro u,d,t,n
      
     salir+n:    
     
+endm 
+
+cambiarFondoPantalla macro   
+    
+    mov ax,0600h
+    mov bh,00011111b
+    mov ch,0 
+    mov cl,0
+    mov dh,50
+    mov dl,80
+    int 10h    
 endm
     
 
@@ -215,9 +226,13 @@ msgPerdedor db '-----------------------------------------------',10,13
             db '                                               ',10,13
             db '                  Perdiste :(                  ',10,13
             db '-----------------------------------------------',10,13
+            db '                                               ',10,13 
             db '                                               ',10,13
-            db '                                               ',10,13
-            db '    Pulsa cualquier tecla para jugar de nuevo  ','$'
+            db '        Ubicacion de las embarcaciones         ',10,13 
+            db '                                               ',10,13,'$'
+            
+msgPerdedor2 db '                                               ',10,13
+             db '    Pulsa cualquier tecla para jugar de nuevo  ','$'
          
 espacio db 10,13,'$'         
                                                       
@@ -288,24 +303,31 @@ contador db 0
         
 .code   
 
-.startup  
-
+.startup 
+    
 ;-----------------------------Pantalla de bienvenida----------------------------------
 
+inicio: 
+
+borrarPantalla
+cambiarFondoPantalla
 imprimir msgBien1 
 
 ;ingreso de tecla para segunda pantalla de bienvenida
 mov ah,01h   
 int 21h 
 
-borrarPantalla
+borrarPantalla   
+cambiarFondoPantalla
 imprimir msgBien2
 
 ;ingreso de tecla para empezar juego
 mov ah,01h   
 int 21h
-            
+
+           
 borrarPantalla
+cambiarFondoPantalla
 imprimir msgCarga
 
 
@@ -524,7 +546,8 @@ mov var2y,0
   
 loopJuego: 
 
-borrarPantalla
+borrarPantalla 
+cambiarFondoPantalla
 imprimir cabecera
 imprimir tablero 
 
@@ -634,17 +657,52 @@ jmp juegoPerdido
 ;si el jugador gana
 terminarJuego:
 borrarPantalla
-imprimir msgGanador 
+cambiarFondoPantalla
+imprimir msgGanador
+mov ah,01h   
+int 21h  
 jmp salir 
 
 
 ;si el jugador pierde
 juegoPerdido:
+
+
+;se presentan las ubicaciones de las embarcaciones
+mov si, offset ubicacionSub
+mov cx,3  
+repsuesta1:
+mov bl,[si] 
+mov tablero[bx],'S' 
+inc si
+loop repsuesta1   
+
+mov si, offset ubicacionCruc
+mov cx,4  
+repsuesta2:
+mov bl,[si] 
+mov tablero[bx],'C' 
+inc si
+loop repsuesta2
+
+mov si, offset ubicacionPort
+mov cx,5  
+repsuesta3:
+mov bl,[si] 
+mov tablero[bx],'P' 
+inc si
+loop repsuesta3
+
 borrarPantalla
+cambiarFondoPantalla
 imprimir msgPerdedor
+imprimir tablero
+imprimir msgPerdedor2
+mov ah,01h   
+int 21h 
 jmp salir
 
 salir:
-
+jmp inicio
 
 
