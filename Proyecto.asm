@@ -121,15 +121,107 @@ verificarEstadoFlota macro u,d,t,n
     
 endm 
 
-cambiarFondoPantalla macro   
+validarCoordX macro x
     
-    mov ax,0600h
-    mov bh,00011111b
-    mov ch,0 
-    mov cl,0
-    mov dh,50
-    mov dl,80
-    int 10h    
+    cmp x,41h
+    jz salidax  
+    
+    cmp x,42h
+    jz salidax
+    
+    cmp x,43h
+    jz salidax
+    
+    cmp x,44h
+    jz salidax
+    
+    cmp x,45h
+    jz salidax
+    
+    cmp x,46h
+    jz salidax
+    
+    cmp x,47h
+    jz salidax
+              
+              
+    imprimir espacio
+    imprimir msgCoordError
+    reingresarCoordenada1:
+    mov ah,07h   
+    int 21h 
+    cmp al,0dh 
+    jnz reingresarCoordenada1
+    jmp pedirCoordenadas
+      
+    salidax: 
+    
+endm 
+
+validarCoordY macro y
+    
+    cmp y,31h
+    jz saliday  
+    
+    cmp y,32h
+    jz saliday
+    
+    cmp y,33h
+    jz saliday
+    
+    cmp y,34h
+    jz saliday
+    
+    cmp y,35h
+    jz saliday
+    
+    cmp y,36h
+    jz saliday
+    
+    cmp y,37h
+    jz saliday
+              
+              
+    imprimir espacio
+    imprimir msgCoordError
+    reingresarCoordenada2:
+    mov ah,07h   
+    int 21h 
+    cmp al,0dh 
+    jnz reingresarCoordenada2
+    jmp pedirCoordenadas
+      
+    saliday: 
+    
+endm 
+
+verificarSiCoordNueva macro c,l
+      
+    mov si, offset l
+    mov cx,21  
+    verifCoord:
+    mov bl,[si] 
+    cmp bl,c
+    jz  pedirNueva
+    jnz terminar
+    terminar: 
+    inc si 
+    loop verifCoord 
+    jmp salida
+    
+    pedirNueva: 
+    imprimir espacio
+    imprimir msgCoordRepet
+    reingresarCoordenada3:
+    mov ah,07h   
+    int 21h 
+    cmp al,0dh 
+    jnz reingresarCoordenada3
+    jmp pedirCoordenadas 
+    
+    salida:
+    
+
 endm
     
 
@@ -161,7 +253,7 @@ msgBien1 db '-------------------------------------------------',10,13
          db '                 6 - - - - - - -                 ',10,13
          db '                 7 - - - - - - -                 ',10,13,
          db '                                                 ',10,13
-         db '    Presiona cualquier tecla para continuar ->   ',10,13,'$' 
+         db '         Presiona ENTER para continuar ->        ',10,13,'$' 
          
 
 msgBien2 db '                                                 ',10,13
@@ -170,11 +262,15 @@ msgBien2 db '                                                 ',10,13
          db '                  marcara con un 0.              ',10,13
          db '                                                 ',10,13
          db '  4. Tendras 21 misiles para acabar con la flota ',10,13
-         db '                      enemiga.                   ',10,13
+         db '   enemiga formada por un Portaviones (5 celdas) , ',10,13 
+         db '  un Crucero(4 celdas) y un Submarino (3 celdas) ',10,13
          db '                                                 ',10,13
          db '                  Buena suerte!!!                ',10,13
+         db '                                                 ',10,13
+         db ' NOTA: Presiona CTRL+E en cualquier momento para ',10,13
+         db '                 salir del juego.                ',10,13
          db '                                                 ',10,13 
-         db '  Presiona cualquier tecla para empezar a jugar  ',10,13,'$'
+         db '      Presiona ENTER para empezar a jugar        ',10,13,'$'
          
 msgCarga db '-------------------------------------------------',10,13 
          db '-------------------------------------------------',10,13 
@@ -184,6 +280,34 @@ msgCarga db '-------------------------------------------------',10,13
          db '-------------------------------------------------',10,13 
          db '--------------- Generando tablero ---------------',10,13
          db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13   
+         db '-------------------------------------------------',10,13
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13,'$' 
+         
+msgBorr  db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13 
+         db '------------- Preparando nuevo juego ------------',10,13
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13   
+         db '-------------------------------------------------',10,13
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13,'$'
+         
+msgFin   db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13
+         db '-------------------------------------------------',10,13 
+         db '-------------------------------------------------',10,13 
+         db '---------------- Cerrando juego.... -------------',10,13 
+         db '-------------------------------------------------',10,13
+         db '-------------- Gracias por jugar  :) ------------',10,13 
          db '-------------------------------------------------',10,13 
          db '-------------------------------------------------',10,13   
          db '-------------------------------------------------',10,13
@@ -201,15 +325,21 @@ cabecera db '-----------------------------------------------',10,13
 
 estado1  db '-----------------------------------------------',10,13
          db '           Estado: Impacto confirmado          ',10,13
-         db '-----------------------------------------------',10,13,'$'
+         db '-----------------------------------------------',10,13
+         db '                                               ',10,13
+         db '          Presiona ENTER para continuar        ',10,13,'$'
 
 estado2  db '-----------------------------------------------',10,13
          db '            Estado: Impacto fallido            ',10,13
-         db '-----------------------------------------------',10,13,'$'
+         db '-----------------------------------------------',10,13
+         db '                                               ',10,13
+         db '          Presiona ENTER para continuar        ',10,13,'$'
 
 estado3  db '-----------------------------------------------',10,13
          db '           Estado:Embarcacion hundida          ',10,13 
-         db '-----------------------------------------------',10,13,'$'
+         db '-----------------------------------------------',10,13
+         db '                                               ',10,13
+         db '          Presiona ENTER para continuar        ',10,13,'$'
          
 msgGanador  db '-----------------------------------------------',10,13 
             db '      Derribaste toda la flota enemiga!!!      ',10,13  
@@ -218,7 +348,9 @@ msgGanador  db '-----------------------------------------------',10,13
             db '-----------------------------------------------',10,13
             db '                                               ',10,13
             db '                                               ',10,13
-            db '    Pulsa cualquier tecla para jugar de nuevo  ','$'
+            db '        Pulsa ENTER para jugar de nuevo        ',10,13
+            db '                                               ',10,13
+            db '       Pulsa CTRL+E para salir del juego       ',10,13,'$'
              
 
 msgPerdedor db '-----------------------------------------------',10,13 
@@ -229,12 +361,18 @@ msgPerdedor db '-----------------------------------------------',10,13
             db '                                               ',10,13 
             db '                                               ',10,13
             db '        Ubicacion de las embarcaciones         ',10,13 
+            db '                                               ',10,13
+            db '       P=Portaviones C=Crucero S=Submarino     ',10,13
             db '                                               ',10,13,'$'
             
 msgPerdedor2 db '                                               ',10,13
-             db '    Pulsa cualquier tecla para jugar de nuevo  ','$'
+             db '         Pulsa ENTER para jugar de nuevo       ',10,13
+             db '                                               ',10,13
+             db '        Pulsa CTRL+E para salir del juego      ',10,13,'$'
+            
          
-espacio db 10,13,'$'         
+espacio db 10,13,'$'
+        
                                                       
 tablero db 09,09,'  A B C D E F G',10,13   
         db 09,09,'1 - - - - - - -',10,13
@@ -268,7 +406,20 @@ tableroCopia db 09,09,'  A B C D E F G',10,13
 ingresoCoordUser1 db 10,13 
                   db 'Misil ','$'
 
-ingresoCoordUser2 db ', ingresar celda a atacar: ','$'
+ingresoCoordUser2 db ', ingresar celda a atacar (Ejemplo A4): ','$' 
+
+msgCoordError db '                                                 ',10,13
+              db '              Coordenada no valida!              ',10,13
+              db '                                                 ',10,13
+              db '    Presiona ENTER para reingresar coordenada    ','$' 
+              
+msgCoordRepet db '                                                 ',10,13
+              db '             Coordenada ya ingresada             ',10,13
+              db '                                                 ',10,13
+              db '    Presiona ENTER para reingresar coordenada    ','$'
+              
+msgEspera  db '                                                 ',10,13
+           db '            Calculando trayectoria...            ',10,13,'$'
                             
 
 cxMisiles db 1    ;se utiliza como contador de misiles y turnos
@@ -300,6 +451,9 @@ var4s db 0   ;para guardar salto en la tabla (dependiendo si es horizontal o ver
 coordxy db 23d ;indice inicial (coordenada 0,0)
 
 contador db 0 
+
+coordenadasIngresadas db 21 dup (0)
+contadorC db 0 
         
 .code   
 
@@ -310,24 +464,31 @@ contador db 0
 inicio: 
 
 borrarPantalla
-cambiarFondoPantalla
 imprimir msgBien1 
 
 ;ingreso de tecla para segunda pantalla de bienvenida
-mov ah,01h   
-int 21h 
+cambiarPantalla1:  ;cambiarPantallaX sirve para saber si el jugador quiere seguir o salir del juego
+mov ah,07h   
+int 21h   
+cmp al,05h         ;verificar si el usuario ingreso CTRL+E
+jz cerrarJuego
+cmp al,0dh         ;verificar si el usuario ingreso ENTER
+jnz cambiarPantalla1
 
 borrarPantalla   
-cambiarFondoPantalla
 imprimir msgBien2
 
 ;ingreso de tecla para empezar juego
-mov ah,01h   
+cambiarPantalla2:
+mov ah,07h   
 int 21h
+cmp al,05h
+jz cerrarJuego 
+cmp al,0dh 
+jnz cambiarPantalla2
 
            
 borrarPantalla
-cambiarFondoPantalla
 imprimir msgCarga
 
 
@@ -546,31 +707,41 @@ mov var2y,0
   
 loopJuego: 
 
+pedirCoordenadas:
 borrarPantalla 
-cambiarFondoPantalla
 imprimir cabecera
-imprimir tablero 
+imprimir tablero
 
-;impresion de linea con mensaje para pedir una coordenada
+;impresion de linea con mensaje para pedir una coordenada 
 imprimir ingresoCoordUser1 
 mov al,cxMisiles
 convertirNumero           ;convertir numero del misil por lanzar
 mostrarNumero             ;mostrar numero del misil por lanzar
 imprimir ingresoCoordUser2 
 
-add cxMisiles,1 
-sub turnosJuego,1
-
 ;se obtiene indicie de tablero donde caera el misil
-mov si, offset coordenadaUser
-mov cx,2
-loopCoord:
+
+
+;validacion de ingreso de coordenada x
+CoordX:
+mov ah,01h   
+int 21h
+cmp al,05h
+jz cerrarJuego
+validarCoordX al 
+mov coordenadaUser[0], al 
+
+;validacion de ingreso de coordenada y
+CoordY:
 mov ah,01h   
 int 21h 
-mov [si], ax 
-inc si
-loop loopCoord
+cmp al,05h
+jz cerrarJuego
+validarCoordY al 
+mov coordenadaUser[1], al
+
 imprimir espacio
+imprimir msgEspera
 
 ;Obtencion de indice del tablero  
 mov dl,coordenadaUser[0]
@@ -583,9 +754,25 @@ mov var2y,dl
 
 mov coordxy,23d 
 
-obtenerIndice var1x,var2y 
+obtenerIndice var1x,var2y
 
+;validar si la coordenada ya ha sido ingresada o no
+verificarSiCoordNueva  coordxy,coordenadasIngresadas
+
+ 
+;agregar coordenada nueva a las ya ingresadas
+mov bl,contadorC 
+mov al,coordxy
+mov coordenadasIngresadas[bx],al
+add contadorC,1 
+
+mov bx,0
+mov ax,0
 mov bl,coordxy
+
+add cxMisiles,1 
+sub turnosJuego,1
+
  
 ;verificar si el disparo acerto o no
 cmp tableroCopia[bx],'-'
@@ -647,62 +834,167 @@ cmp embarcacionesHundidas,3
 jz terminarJuego  
 
 ;caso contrario el juego sigue
-mov ah,01h   
-int 21h 
+cambiarPantalla3:
+mov ah,07h   
+int 21h
+cmp al,05h
+jz cerrarJuego 
+cmp al,0dh 
+jnz cambiarPantalla3 
 
 cmp turnosJuego,0
 jnz loopJuego 
 jmp juegoPerdido
 
+
 ;si el jugador gana
 terminarJuego:
+
+cambiarPantalla4:
+mov ah,07h   
+int 21h
+cmp al,05h
+jz cerrarJuego 
+cmp al,0dh 
+jnz cambiarPantalla4  
+
 borrarPantalla
-cambiarFondoPantalla
 imprimir msgGanador
-mov ah,01h   
-int 21h  
+
+mov ah,07h  
+int 21h 
+cmp al,05h 
+jz cerrarJuego  
 jmp salir 
 
 
 ;si el jugador pierde
 juegoPerdido:
 
-
 ;se presentan las ubicaciones de las embarcaciones
 mov si, offset ubicacionSub
 mov cx,3  
-repsuesta1:
+respuesta1:
 mov bl,[si] 
 mov tablero[bx],'S' 
 inc si
-loop repsuesta1   
+loop respuesta1   
 
 mov si, offset ubicacionCruc
 mov cx,4  
-repsuesta2:
+respuesta2:
 mov bl,[si] 
 mov tablero[bx],'C' 
 inc si
-loop repsuesta2
+loop respuesta2
 
 mov si, offset ubicacionPort
 mov cx,5  
-repsuesta3:
+respuesta3:
 mov bl,[si] 
 mov tablero[bx],'P' 
 inc si
-loop repsuesta3
+loop respuesta3
 
 borrarPantalla
-cambiarFondoPantalla
 imprimir msgPerdedor
 imprimir tablero
 imprimir msgPerdedor2
-mov ah,01h   
+
+cambiarPantalla5:
+mov ah,07h   
 int 21h 
+cmp al,05h
+jz cerrarJuego 
+cmp al,0dh
+jnz cambiarPantalla5
 jmp salir
 
-salir:
+salir: 
+
+borrarPantalla
+imprimir msgBorr
+
+;limpieza de datos
+
+mov si, offset ubicacionSub
+mov cx,3  
+limpieza1:
+mov bl,[si] 
+mov tablero[bx],'-' 
+mov tableroCopia[bx],'-'
+mov [si],0 
+inc si
+loop limpieza1   
+
+mov si, offset ubicacionCruc
+mov cx,4  
+limpieza2:
+mov bl,[si] 
+mov tablero[bx],'-'
+mov tableroCopia[bx],'-'
+mov [si],0 
+inc si
+loop limpieza2
+
+mov si, offset ubicacionPort
+mov cx,5  
+limpieza3:
+mov bl,[si] 
+mov tablero[bx],'-'
+mov tableroCopia[bx],'-'
+mov [si],0 
+inc si
+loop limpieza3
+
+mov si, offset coordenadasIngresadas
+mov cx,21  
+limpieza4:
+mov bl,[si]
+cmp bl,0
+jz terminarLimp
+jnz limpiar
+
+limpiar: 
+mov tablero[bx],'-'
+mov tableroCopia[bx],'-'
+mov [si],0 
+inc si
+loop limpieza4 
+terminarLimp: 
+
+mov disparosPort, 5
+mov disparosCruc, 4 
+mov disparosSub, 3 
+mov embarcacionesHundidas, 0 
+mov turnosJuego, 21
+mov cxMisiles, 1
+mov coordxy,23d  
+mov contador, 0 
+mov contadorC, 0 
+
+mov ax,0
+mov bx,0 
+mov cx,0 
+mov dx,0
+mov sp,0
+mov bp,0
+mov si,0
+mov di,0
+
 jmp inicio
 
+ 
+;si el jugadro presiona CTRL+E 
+cerrarJuego:
 
+borrarPantalla
+imprimir msgFin 
+
+mov cx,100
+espera:
+sub cx,1
+cmp cx,0
+jnz espera
+
+end
